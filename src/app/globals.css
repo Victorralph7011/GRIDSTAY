@@ -40,10 +40,6 @@
   box-sizing: border-box;
 }
 
-html {
-  scroll-behavior: smooth;
-}
-
 body {
   background-color: var(--color-gs-white);
   color: var(--color-gs-charcoal);
