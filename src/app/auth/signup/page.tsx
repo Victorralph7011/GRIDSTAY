@@ -5,19 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth, type UserRole } from "@/lib/firebase/useAuth";
-
-function EchoLogo() {
-  return (
-    <div className="relative flex items-center justify-center h-16 mb-8 w-full">
-      {/* 4px offset per layer with descending opacities of black/grey */}
-      <span className="absolute font-[family-name:var(--font-display)] font-black text-5xl uppercase tracking-widest text-black/[0.02] translate-y-[16px]">GRIDSTAY</span>
-      <span className="absolute font-[family-name:var(--font-display)] font-black text-5xl uppercase tracking-widest text-black/[0.05] translate-y-[12px]">GRIDSTAY</span>
-      <span className="absolute font-[family-name:var(--font-display)] font-black text-5xl uppercase tracking-widest text-black/[0.15] translate-y-[8px]">GRIDSTAY</span>
-      <span className="absolute font-[family-name:var(--font-display)] font-black text-5xl uppercase tracking-widest text-black/[0.25] translate-y-[4px]">GRIDSTAY</span>
-      <span className="absolute font-[family-name:var(--font-display)] font-black text-5xl uppercase tracking-widest text-black z-10">GRIDSTAY</span>
-    </div>
-  );
-}
+import EchoStackLogo from "@/components/ui/EchoStackLogo";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -67,14 +55,10 @@ export default function SignupPage() {
   const inputBaseClasses = "w-full bg-transparent py-2 text-black focus:outline-none placeholder:text-black/30 border-b border-black/20 focus:border-black transition-colors [&:-webkit-autofill]:bg-transparent [&:-webkit-autofill]:[-webkit-box-shadow:0_0_0_50px_rgba(255,255,255,0.01)_inset] [&:-webkit-autofill]:[-webkit-text-fill-color:black]";
 
   return (
-    <div
-      className="min-h-screen w-full flex items-center justify-center overflow-hidden font-[family-name:var(--font-body)] p-6 py-12 bg-cover bg-center bg-fixed"
-      style={{ 
-        // Abstract light-grey bokeh/hexagonal placeholder background
-        backgroundImage: 'url("https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2560&auto=format&fit=crop")',
-        backgroundColor: '#f3f4f6' 
-      }}
-    >
+    <div className="min-h-screen w-full flex items-center justify-center overflow-hidden font-[family-name:var(--font-body)] p-6 py-12 relative">
+      {/* Abstract high-blur background — no external image, matches login page */}
+      <div className="auth-bg" />
+
       {/* Light Glass Card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -90,7 +74,7 @@ export default function SignupPage() {
       >
         {/* Header Section */}
         <div className="flex flex-col items-center w-full">
-          <EchoLogo />
+          <EchoStackLogo className="mb-4" />
           <h2 className="text-black text-2xl font-semibold tracking-tight font-[family-name:var(--font-display)]">Get started</h2>
         </div>
 
