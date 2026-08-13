@@ -6,44 +6,37 @@ interface GlassCardProps {
   children: React.ReactNode;
   className?: string;
   hover?: boolean;
-  glow?: "lime" | "cyan" | "none";
   padding?: string;
   rounded?: string;
 }
 
 /**
- * GlassCard — Core glassmorphic primitive.
+ * GlassCard — Core glassmorphic primitive, matching .glass-card in globals.css.
  *
  * Implements:
- *   backdrop-filter: blur(12px)
+ *   backdrop-filter: blur(20px)
  *   background: rgba(255, 255, 255, 0.05)
- *   border: 1px solid rgba(255, 255, 255, 0.10)
+ *   border: 1px solid rgba(255, 255, 255, 0.20)
  */
 export default function GlassCard({
   children,
   className = "",
   hover = true,
-  glow = "none",
   padding = "p-8",
   rounded = "rounded-2xl",
 }: GlassCardProps) {
-  const glowMap = {
-    lime: "hover:shadow-[0_0_30px_rgba(212,255,0,0.15)]",
-    cyan: "hover:shadow-[0_0_30px_rgba(0,240,255,0.15)]",
-    none: "",
-  };
-
   return (
     <div
       className={`
-        glass
         ${rounded}
         ${padding}
+        border border-white/20
+        backdrop-blur-[20px]
         transition-all duration-700
-        ${hover ? "hover:bg-white/[0.08] hover:border-white/20 hover:scale-[1.01]" : ""}
-        ${glowMap[glow]}
+        ${hover ? "hover:bg-white/[0.08] hover:border-white/30 hover:scale-[1.01]" : ""}
         ${className}
       `}
+      style={{ background: "rgba(255, 255, 255, 0.05)" }}
     >
       {children}
     </div>

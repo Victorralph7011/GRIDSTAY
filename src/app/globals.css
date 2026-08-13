@@ -33,11 +33,17 @@
   --gs-transition-fast: 300ms cubic-bezier(0.77, 0, 0.175, 1);
 }
 
-/* ── Global Resets ── */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+/* ── Global Resets ──
+   Must live inside @layer base. Unlayered CSS outranks all layered CSS
+   in the cascade, so a bare universal margin/padding reset here would
+   silently beat every Tailwind padding and margin utility (they ship
+   in @layer utilities) and null out spacing app-wide. */
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
 }
 
 body {
@@ -184,6 +190,24 @@ h1, h2, h3, h4, h5, h6 {
   transform: scale(1.15);
 }
 
+/* ── Listing Card (Marketplace) ──
+   Same white/border/hover language as .feature-card, laid out for a
+   photo-forward card instead of an icon+text feature block. */
+.listing-card {
+  background: var(--color-gs-white);
+  border: 1px solid var(--color-gs-lightgrey);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all var(--gs-transition);
+}
+
+.listing-card:hover {
+  border-color: #d0d0d0;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
+}
+
 /* ── Pulse Animation (Verified Badge) ── */
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; transform: scale(1); }
@@ -228,17 +252,20 @@ html.lenis, html.lenis body {
   overflow: hidden;
 }
 
-/* ── Blurred Organic Background ── */
+/* ── Blurred Organic Background ──
+   Deliberately higher-contrast than a flat wash: the frosted card
+   only reads as glass if there is something varied behind it to
+   refract. Keep some darker anchors in the mix. */
 .auth-bg {
   position: fixed;
   inset: 0;
   z-index: 0;
   background:
-    radial-gradient(ellipse 80% 60% at 20% 30%, rgba(203, 213, 225, 0.5) 0%, transparent 70%),
-    radial-gradient(ellipse 70% 50% at 80% 70%, rgba(186, 200, 220, 0.45) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(220, 225, 235, 0.4) 0%, transparent 50%),
-    radial-gradient(ellipse 90% 80% at 60% 20%, rgba(230, 235, 245, 0.35) 0%, transparent 65%);
-  background-color: #e8ecf2;
+    radial-gradient(ellipse 70% 55% at 18% 25%, rgba(148, 163, 190, 0.75) 0%, transparent 68%),
+    radial-gradient(ellipse 65% 50% at 82% 72%, rgba(120, 138, 168, 0.6) 0%, transparent 62%),
+    radial-gradient(ellipse 55% 45% at 62% 18%, rgba(186, 199, 220, 0.65) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 70% at 40% 88%, rgba(160, 174, 198, 0.5) 0%, transparent 65%);
+  background-color: #dfe5ee;
   filter: blur(40px);
 }
 
@@ -247,28 +274,32 @@ html.lenis, html.lenis body {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle 180px at 25% 45%, rgba(190, 200, 215, 0.6) 0%, transparent 100%),
-    radial-gradient(circle 220px at 75% 35%, rgba(195, 205, 220, 0.5) 0%, transparent 100%),
-    radial-gradient(circle 150px at 55% 75%, rgba(200, 210, 225, 0.5) 0%, transparent 100%),
-    radial-gradient(circle 200px at 35% 65%, rgba(185, 195, 215, 0.4) 0%, transparent 100%);
-  filter: blur(20px);
+    radial-gradient(circle 200px at 25% 45%, rgba(126, 145, 178, 0.55) 0%, transparent 100%),
+    radial-gradient(circle 240px at 78% 32%, rgba(140, 158, 188, 0.45) 0%, transparent 100%),
+    radial-gradient(circle 170px at 55% 78%, rgba(150, 165, 192, 0.45) 0%, transparent 100%),
+    radial-gradient(circle 210px at 35% 65%, rgba(132, 150, 182, 0.4) 0%, transparent 100%);
+  filter: blur(24px);
 }
 
-/* ── Glass Card ── */
+/* ── Glass Card ──
+   White opacity has to stay high enough to separate from a light
+   backdrop — at 0.05 the card disappears and reads as a flat panel
+   with the form floating loose on the page. */
 .glass-card {
   position: relative;
   z-index: 10;
   width: 100%;
   max-width: 460px;
   padding: 48px 44px;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 24px;
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    0 24px 60px rgba(31, 41, 66, 0.16),
+    0 2px 8px rgba(31, 41, 66, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
 @media (max-width: 480px) {

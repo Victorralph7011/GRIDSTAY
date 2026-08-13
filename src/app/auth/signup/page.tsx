@@ -52,10 +52,10 @@ export default function SignupPage() {
   if (error && !showToast) { flash(error); clearError(); }
 
   // CSS Hack to kill Chrome's ugly autofill background boxes
-  const inputBaseClasses = "w-full bg-transparent py-2 text-black focus:outline-none placeholder:text-black/30 border-b border-black/20 focus:border-black transition-colors [&:-webkit-autofill]:bg-transparent [&:-webkit-autofill]:[-webkit-box-shadow:0_0_0_50px_rgba(255,255,255,0.01)_inset] [&:-webkit-autofill]:[-webkit-text-fill-color:black]";
+  const inputBaseClasses = "w-full bg-white/50 rounded-xl px-4 py-3 text-[15px] text-black border border-black/10 placeholder:text-black/30 focus:outline-none focus:border-black/40 focus:bg-white/70 transition-colors [&:-webkit-autofill]:[-webkit-box-shadow:0_0_0_50px_rgba(255,255,255,0.85)_inset] [&:-webkit-autofill]:[-webkit-text-fill-color:black]";
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center overflow-hidden font-[family-name:var(--font-body)] p-6 py-12 relative">
+    <div className="auth-page-wrapper font-[family-name:var(--font-body)]">
       {/* Abstract high-blur background — no external image, matches login page */}
       <div className="auth-bg" />
 
@@ -64,49 +64,43 @@ export default function SignupPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 w-full max-w-md p-12 rounded-[40px] flex flex-col gap-10 shadow-2xl shadow-black/5 my-auto"
-        style={{
-          background: 'rgba(255, 255, 255, 0.05)',
-          backdropFilter: 'blur(25px)',
-          WebkitBackdropFilter: 'blur(25px)',
-          border: '1px solid rgba(255, 255, 255, 0.20)',
-        }}
+        className="glass-card flex flex-col gap-9"
       >
         {/* Header Section */}
-        <div className="flex flex-col items-center w-full">
-          <EchoStackLogo className="mb-4" />
-          <h2 className="text-black text-2xl font-semibold tracking-tight font-[family-name:var(--font-display)]">Get started</h2>
+        <div className="flex flex-col items-center w-full gap-2">
+          <EchoStackLogo size="34px" />
+          <p className="text-[13px] text-black/45 tracking-wide">Get started</p>
         </div>
 
         {/* Dual-Role Toggle */}
-        <div className="relative flex p-1 rounded-full border border-black/10 bg-black/5">
+        <div className="relative grid grid-cols-2 p-1 rounded-full bg-black/[0.06]">
           <motion.div
-            className="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-full bg-black/10"
+            className="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-full bg-white shadow-sm"
             animate={{ x: role === "student" ? 0 : "100%" }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
           />
           <button
             type="button"
             onClick={() => setRole("student")}
-            className={`relative z-10 flex-1 py-3 text-xs font-bold uppercase tracking-widest transition-colors ${role === "student" ? "text-black" : "text-black/40 hover:text-black/70"}`}
+            className={`relative z-10 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] transition-colors ${role === "student" ? "text-black" : "text-black/40 hover:text-black/70"}`}
           >
             Student
           </button>
           <button
             type="button"
             onClick={() => setRole("provider")}
-            className={`relative z-10 flex-1 py-3 text-xs font-bold uppercase tracking-widest transition-colors ${role === "provider" ? "text-black" : "text-black/40 hover:text-black/70"}`}
+            className={`relative z-10 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] transition-colors ${role === "provider" ? "text-black" : "text-black/40 hover:text-black/70"}`}
           >
             Hostel Owner
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="flex flex-col gap-10">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
 
           {/* Full Name */}
           <div className="flex flex-col gap-2">
-            <label className="text-[11px] font-bold tracking-[0.2em] uppercase text-black/50">Full Name</label>
+            <label className="text-[10px] font-bold tracking-[0.16em] uppercase text-black/45">Full Name</label>
             <input
               type="text"
               value={displayName}
@@ -118,7 +112,7 @@ export default function SignupPage() {
 
           {/* Email */}
           <div className="flex flex-col gap-2">
-            <label className="text-[11px] font-bold tracking-[0.2em] uppercase text-black/50">Email</label>
+            <label className="text-[10px] font-bold tracking-[0.16em] uppercase text-black/45">Email</label>
             <input
               type="email"
               value={email}
@@ -139,7 +133,7 @@ export default function SignupPage() {
                 className="overflow-hidden"
               >
                 <div className="flex flex-col gap-2">
-                  <label className="text-[11px] font-bold tracking-[0.2em] uppercase flex items-center justify-between text-black/50">
+                  <label className="text-[10px] font-bold tracking-[0.16em] uppercase flex items-center justify-between text-black/45">
                     Aadhaar Number
                     <span className="text-[8px] tracking-wider opacity-60">REQUIRED FOR ESIGN</span>
                   </label>
@@ -159,7 +153,7 @@ export default function SignupPage() {
 
           {/* Password */}
           <div className="flex flex-col gap-2">
-            <label className="text-[11px] font-bold tracking-[0.2em] uppercase text-black/50">Password</label>
+            <label className="text-[10px] font-bold tracking-[0.16em] uppercase text-black/45">Password</label>
             <input
               type="password"
               value={password}
@@ -171,7 +165,7 @@ export default function SignupPage() {
 
           {/* Confirm Password */}
           <div className="flex flex-col gap-2">
-            <label className="text-[11px] font-bold tracking-[0.2em] uppercase text-black/50">Confirm Password</label>
+            <label className="text-[10px] font-bold tracking-[0.16em] uppercase text-black/45">Confirm Password</label>
             <input
               type="password"
               value={confirmPassword}
@@ -187,7 +181,7 @@ export default function SignupPage() {
             whileTap={{ scale: 0.98 }}
             type="submit"
             disabled={loading}
-            className="w-full bg-[#111111] text-white font-extrabold uppercase tracking-[0.2em] py-4 rounded-full flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-black/20"
+            className="w-full mt-2 bg-[#111111] text-white text-[12px] font-bold uppercase tracking-[0.16em] py-4 rounded-full flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-black/20 hover:bg-black transition-colors"
           >
             {loading ? (
               <span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />

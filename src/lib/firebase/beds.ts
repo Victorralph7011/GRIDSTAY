@@ -10,8 +10,15 @@
  *   "available" | "occupied" | "maintenance"
  */
 
-// import { db } from "./config";
-// import { collection, onSnapshot, doc, updateDoc } from "firebase/firestore";
+import { db } from "./config";
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  doc,
+  updateDoc,
+} from "firebase/firestore";
 
 export type BedStatus = "available" | "occupied" | "maintenance";
 
@@ -31,23 +38,39 @@ export interface Bed {
  */
 export function subscribeToBeds(
   propertyId: string,
-  callback: (beds: Bed[]) => void
+  callback: (beds: Bed[]) => void,
+  onError?: (error: Error) => void
 ): () => void {
-  // TODO: Implement with Firestore onSnapshot
-  console.log(`[GridStay] Subscribing to beds for property: ${propertyId}`);
-  return () => {
-    console.log(`[GridStay] Unsubscribed from property: ${propertyId}`);
-  };
+  const bedsQuery = query(
+    collection(db, "beds"),
+    where("propertyId", "==", propertyId)
+  );
+
+  return onSnapshot(
+    bedsQuery,
+    (snapshot) => {
+      const beds = snapshot.docs.map(
+        (docSnap) => ({ id: docSnap.id, ...docSnap.data() }) as Bed
+      );
+      callback(beds);
+    },
+    (error) => {
+      console.error("[GridStay] subscribeToBeds failed:", error);
+      onError?.(error);
+    }
+  );
 }
 
 /**
  * Update a single bed's status.
  */
 export async function updateBedStatus(
-  propertyId: string,
   bedId: string,
-  status: BedStatus
+  status: BedStatus,
+  tenantId?: string
 ): Promise<void> {
-  // TODO: Implement with Firestore updateDoc
-  console.log(`[GridStay] Updating bed ${bedId} to ${status}`);
+  await updateDoc(doc(db, "beds", bedId), {
+    status,
+    tenantId: tenantId ?? null,
+  });
 }

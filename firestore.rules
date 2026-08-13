@@ -1,0 +1,96 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwnerOf(propertyId) {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/properties/$(propertyId)).data.providerId == request.auth.uid;
+    }
+
+    // ── users/{uid} ──
+    // Profile data (incl. Aadhaar number) is only visible to its owner.
+    match /users/{uid} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    // ── properties/{propertyId} ──
+    // Public read so the explore page works for signed-out visitors.
+    // Only the owning provider can create/edit their own property.
+    match /properties/{propertyId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.providerId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.providerId == request.auth.uid;
+    }
+
+    // ── rooms/{roomId} ──
+    // Public read (needed on the listing detail page). Writes scoped
+    // to the parent property's owner via a lookup, since rooms don't
+    // carry their own providerId field.
+    match /rooms/{roomId} {
+      allow read: if true;
+      allow create: if isOwnerOf(request.resource.data.propertyId);
+      allow update, delete: if isOwnerOf(resource.data.propertyId);
+    }
+
+    // ── beds/{bedId} ──
+    // Public read (live availability). Two distinct write paths:
+    // 1. The owning provider can fully manage a bed (maintenance
+    //    toggle, manual tenant assign/remove).
+    // 2. A signed-in student can flip ONLY their own currently-
+    //    available bed to occupied with themselves as tenant, and
+    //    ONLY those two fields — this is what the booking-confirmation
+    //    transaction in bookings.ts needs in order to work at all.
+    //    It intentionally cannot mark a bed available/maintenance or
+    //    assign someone else as tenant.
+    match /beds/{bedId} {
+      allow read: if true;
+      // `resource` is null on create — the incoming doc is only
+      // readable via `request.resource`, so these must stay split.
+      allow create: if isOwnerOf(request.resource.data.propertyId);
+      allow delete: if isOwnerOf(resource.data.propertyId);
+      allow update: if isOwnerOf(resource.data.propertyId) || (
+        isSignedIn() &&
+        resource.data.status == "available" &&
+        request.resource.data.status == "occupied" &&
+        request.resource.data.tenantId == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status", "tenantId"])
+      );
+    }
+
+    // ── bookings/{bookingId} ──
+    // Only the booking's own student or the relevant property's
+    // provider can read it. Students create their own bookings and
+    // may progress status/contractId/paymentId forward (the booking
+    // half of the same atomic transaction covered by the beds rule
+    // above); they cannot reassign a booking to a different bed or
+    // student after creation.
+    match /bookings/{bookingId} {
+      allow read: if isSignedIn() && (
+        resource.data.studentId == request.auth.uid ||
+        isOwnerOf(resource.data.propertyId)
+      );
+      allow create: if isSignedIn() &&
+        request.resource.data.studentId == request.auth.uid &&
+        request.resource.data.status == "pending_esign";
+      allow update: if isSignedIn() &&
+        resource.data.studentId == request.auth.uid &&
+        request.resource.data.studentId == resource.data.studentId &&
+        request.resource.data.propertyId == resource.data.propertyId &&
+        request.resource.data.roomId == resource.data.roomId &&
+        request.resource.data.bedId == resource.data.bedId;
+    }
+
+    // ── reviews/{reviewId} ──
+    // Public read. Only the author can create/edit/delete their own.
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.studentId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.studentId == request.auth.uid;
+    }
+  }
+}
