@@ -40,6 +40,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# claude code local session state
-.claude/settings.local.json
-.claude/worktrees/
+# claude code local session state — entire directory, not pushed
+.claude/

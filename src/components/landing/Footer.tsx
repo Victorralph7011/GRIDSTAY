@@ -1,6 +1,25 @@
 "use client";
 
+import Link from "next/link";
 import { Globe, Send, Mail, MapPin } from "lucide-react";
+
+const EXPLORE_LINKS = [
+  { label: "Search Stays", href: "/explore" },
+  { label: "Premium Listings", href: "/explore" },
+  // subscribeToProperties always filters verified:true, so /explore's
+  // contents already ARE "verified properties" — no separate view exists
+  // or needs to.
+  { label: "Verified Properties", href: "/explore" },
+  { label: "For Students", href: "/explore" },
+];
+
+const COMPANY_LINKS = [
+  // The landing page IS the about-us content — no separate page exists.
+  { label: "About GridStay", href: "/" },
+  { label: "Careers", href: "mailto:hello@gridstay.in?subject=Careers" },
+  { label: "Privacy Policy", href: "/privacy" },
+  { label: "Terms of Service", href: "/terms" },
+];
 
 export default function Footer() {
   return (
@@ -31,20 +50,15 @@ export default function Footer() {
               Explore
             </h5>
             <ul className="list-none space-y-3">
-              {[
-                "Search Stays",
-                "Premium Listings",
-                "Verified Properties",
-                "For Students",
-              ].map((l) => (
-                <li key={l}>
-                  <a
-                    href="#"
+              {EXPLORE_LINKS.map((l) => (
+                <li key={l.label}>
+                  <Link
+                    href={l.href}
                     className="text-sm transition-colors duration-200 hover:text-white no-underline"
                     style={{ color: "rgba(255,255,255,0.5)" }}
                   >
-                    {l}
-                  </a>
+                    {l.label}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -56,20 +70,15 @@ export default function Footer() {
               Company
             </h5>
             <ul className="list-none space-y-3">
-              {[
-                "About GridStay",
-                "Careers",
-                "Privacy Policy",
-                "Terms of Service",
-              ].map((l) => (
-                <li key={l}>
-                  <a
-                    href="#"
+              {COMPANY_LINKS.map((l) => (
+                <li key={l.label}>
+                  <Link
+                    href={l.href}
                     className="text-sm transition-colors duration-200 hover:text-white no-underline"
                     style={{ color: "rgba(255,255,255,0.5)" }}
                   >
-                    {l}
-                  </a>
+                    {l.label}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -83,7 +92,7 @@ export default function Footer() {
             <ul className="list-none space-y-3">
               <li>
                 <a
-                  href="#"
+                  href="mailto:hello@gridstay.in"
                   className="text-sm transition-colors duration-200 hover:text-white no-underline"
                   style={{ color: "rgba(255,255,255,0.5)" }}
                 >
@@ -92,7 +101,7 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="#"
+                  href="tel:+919000000000"
                   className="text-sm transition-colors duration-200 hover:text-white no-underline"
                   style={{ color: "rgba(255,255,255,0.5)" }}
                 >
@@ -101,7 +110,9 @@ export default function Footer() {
               </li>
               <li className="mt-5">
                 <a
-                  href="#"
+                  href="https://www.google.com/maps/search/?api=1&query=Bangalore,India"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-sm flex items-center gap-2 transition-colors duration-200 hover:text-white no-underline"
                   style={{ color: "rgba(255,255,255,0.5)" }}
                 >
@@ -121,10 +132,26 @@ export default function Footer() {
             &copy; 2026 GridStay. All rights reserved.
           </div>
           <div className="flex gap-5">
-            {[Globe, Send, Mail].map((Icon, i) => (
+            {/* No real social presence exists yet — these route to
+                actual contact channels rather than fabricated profile
+                URLs. Swap in real social links once those exist. */}
+            {[
+              { Icon: Globe, href: "/", label: "GridStay home" },
+              {
+                Icon: Send,
+                href: "mailto:hello@gridstay.in?subject=General%20Inquiry",
+                label: "Send an inquiry",
+              },
+              {
+                Icon: Mail,
+                href: "mailto:hello@gridstay.in?subject=Support",
+                label: "Email support",
+              },
+            ].map(({ Icon, href, label }) => (
               <a
-                key={i}
-                href="#"
+                key={label}
+                href={href}
+                aria-label={label}
                 className="transition-colors duration-200 hover:text-white"
                 style={{ color: "rgba(255,255,255,0.4)" }}
               >

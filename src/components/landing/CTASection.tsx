@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 export default function CTASection() {
   return (
@@ -60,8 +61,15 @@ export default function CTASection() {
           className="flex gap-4 flex-wrap justify-center"
         >
           {/* White button on dark section */}
-          <button className="btn-light">List Property</button>
-          <button className="btn-outline-light">Book a Demo</button>
+          <Link href="/auth/signup?role=provider" className="btn-light">
+            List Property
+          </Link>
+          <a
+            href="mailto:hello@gridstay.in?subject=Book%20a%20Demo"
+            className="btn-outline-light"
+          >
+            Book a Demo
+          </a>
         </motion.div>
       </div>
     </section>

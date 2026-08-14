@@ -14,17 +14,40 @@ service cloud.firestore {
 
     // ── users/{uid} ──
     // Profile data (incl. Aadhaar number) is only visible to its owner.
+    // Role has no other authority behind it (no custom claims, no admin
+    // SDK) — self-declaring a role at signup is unavoidable, but once
+    // set it must be frozen, or a student could rewrite their own doc
+    // to role:"provider" and immediately pass isOwnerOf() everywhere.
     match /users/{uid} {
-      allow read, write: if isSignedIn() && request.auth.uid == uid;
+      allow read, create: if isSignedIn() && request.auth.uid == uid;
+      allow update: if isSignedIn() && request.auth.uid == uid &&
+        request.resource.data.role == resource.data.role;
     }
 
     // ── properties/{propertyId} ──
     // Public read so the explore page works for signed-out visitors.
     // Only the owning provider can create/edit their own property.
+    // New listings are forced unverified with a clean rating slate —
+    // otherwise a provider could self-verify or fabricate a rating on
+    // creation. `update` additionally pins providerId/verified/rating
+    // so a listing can't be handed off to another account or have its
+    // trust signals edited directly; verification and rating changes
+    // have to happen through a separate trusted path (manual console
+    // edit today, an admin/review-aggregation flow later).
     match /properties/{propertyId} {
       allow read: if true;
-      allow create: if isSignedIn() && request.resource.data.providerId == request.auth.uid;
-      allow update, delete: if isSignedIn() && resource.data.providerId == request.auth.uid;
+      allow create: if isSignedIn() &&
+        request.resource.data.providerId == request.auth.uid &&
+        request.resource.data.verified == false &&
+        request.resource.data.ratingAvg == 0 &&
+        request.resource.data.ratingCount == 0;
+      allow update: if isSignedIn() &&
+        resource.data.providerId == request.auth.uid &&
+        request.resource.data.providerId == resource.data.providerId &&
+        request.resource.data.verified == resource.data.verified &&
+        request.resource.data.ratingAvg == resource.data.ratingAvg &&
+        request.resource.data.ratingCount == resource.data.ratingCount;
+      allow delete: if isSignedIn() && resource.data.providerId == request.auth.uid;
     }
 
     // ── rooms/{roomId} ──
@@ -82,7 +105,8 @@ service cloud.firestore {
         request.resource.data.studentId == resource.data.studentId &&
         request.resource.data.propertyId == resource.data.propertyId &&
         request.resource.data.roomId == resource.data.roomId &&
-        request.resource.data.bedId == resource.data.bedId;
+        request.resource.data.bedId == resource.data.bedId &&
+        request.resource.data.moveInDate == resource.data.moveInDate;
     }
 
     // ── reviews/{reviewId} ──

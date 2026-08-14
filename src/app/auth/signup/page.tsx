@@ -1,14 +1,30 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth, type UserRole } from "@/lib/firebase/useAuth";
 import EchoStackLogo from "@/components/ui/EchoStackLogo";
 
+/**
+ * useSearchParams requires a Suspense boundary or `next build` fails
+ * (missing-suspense-with-csr-bailout) — kept as a thin outer shell so
+ * the ?role= read (used by the landing page's "List Property" CTA to
+ * land straight on the Hostel Owner toggle) doesn't force the whole
+ * form into a client-only bailout.
+ */
 export default function SignupPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignupPageContent />
+    </Suspense>
+  );
+}
+
+function SignupPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { signUp, loading, error, clearError } = useAuth();
 
   const [email, setEmail] = useState("");
@@ -16,7 +32,9 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [aadhaarNumber, setAadhaarNumber] = useState("");
-  const [role, setRole] = useState<UserRole>("student");
+  const [role, setRole] = useState<UserRole>(
+    searchParams.get("role") === "provider" ? "provider" : "student"
+  );
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
 

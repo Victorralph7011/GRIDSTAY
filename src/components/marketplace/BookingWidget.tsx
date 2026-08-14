@@ -12,7 +12,17 @@ interface BookingWidgetProps {
   isReserving?: boolean;
 }
 
-const todayISO = () => new Date().toISOString().split("T")[0];
+// `toISOString()` converts to UTC first, so for IST users (UTC+5:30)
+// anytime after ~6:30pm local time it returns tomorrow's date, or
+// before 5:30am returns yesterday's — either way the wrong "today" for
+// a move-in-date floor. Build the string from local date parts instead.
+const todayISO = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
 export default function BookingWidget({
   selectedBed,

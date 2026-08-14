@@ -83,7 +83,14 @@ export default function ProviderPropertyInventoryPage() {
     );
   }
 
-  if (user && property.providerId !== user.uid) {
+  // RoleGuard on the (provider) layout already guarantees `user` is a
+  // signed-in provider by the time this renders — `!user` here is
+  // defense in depth, not the primary gate. The bug this replaces was
+  // `user && property.providerId !== user.uid`: when `user` was null
+  // (signed out, or auth still resolving), the whole check short-
+  // circuited to false and let the request through, exposing tenant
+  // IDs and inventory controls to anyone.
+  if (!user || property.providerId !== user.uid) {
     return (
       <div className="min-h-screen flex items-center justify-center text-gs-charcoal font-medium">
         You don&apos;t have access to this property.

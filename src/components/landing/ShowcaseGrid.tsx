@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
 
 export default function ShowcaseGrid() {
@@ -36,8 +37,8 @@ export default function ShowcaseGrid() {
               Premium Stays
             </h2>
           </div>
-          <a
-            href="#"
+          <Link
+            href="/explore"
             className="no-underline text-sm pb-1"
             style={{
               color: "#ffffff",
@@ -45,7 +46,7 @@ export default function ShowcaseGrid() {
             }}
           >
             View All Properties
-          </a>
+          </Link>
         </motion.div>
 
         {/* Two-column showcase grid matching template */}

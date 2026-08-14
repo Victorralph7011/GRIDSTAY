@@ -19,6 +19,13 @@ export interface GridStayUser {
   role: UserRole;
   displayName?: string;
   aadhaarNumber?: string;
+  /**
+   * Provider-only completion flag for the /onboarding wizard, read
+   * from the users/{uid} doc. Undefined for students and for any
+   * provider doc written before this field existed — treat both as
+   * "not onboarded" rather than throwing.
+   */
+  onboardingComplete?: boolean;
 }
 
 interface AuthState {
@@ -57,6 +64,7 @@ export function useAuth() {
             role: data.role as UserRole,
             displayName: data.displayName,
             aadhaarNumber: data.aadhaarNumber,
+            onboardingComplete: Boolean(data.onboardingComplete),
           };
         }
         return null;

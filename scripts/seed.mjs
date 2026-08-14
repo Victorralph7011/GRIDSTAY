@@ -315,7 +315,11 @@ async function main() {
     const propertyRef = await addDoc(collection(db, "properties"), {
       ...propertyFields,
       providerId,
-      verified: true,
+      // Rules force verified:false on create and freeze it on update —
+      // self-verification would defeat the marketplace's trust model,
+      // so this is deliberately not settable from a normal client
+      // write. See the printed instructions at the end of this script.
+      verified: false,
       priceRange: { min: Math.min(...rents), max: Math.max(...rents) },
       sharingTypes: [...new Set(rooms.map((r) => r.sharingType))],
       createdAt: serverTimestamp(),
@@ -376,6 +380,14 @@ async function main() {
 
   console.log(
     `\nDone. ${LISTINGS.length} properties, ${totalRooms} rooms, ${totalBeds} beds, ${totalReviews} reviews.`
+  );
+  console.log(
+    "\nThese are seeded as verified:false (the rules no longer allow a\n" +
+      "provider to self-verify). To make them show up on /explore, flip\n" +
+      "`verified` to true by hand in the Firebase Console → Firestore →\n" +
+      "properties, or ask me to build an admin-SDK verification script if\n" +
+      "you'll be doing this often:\n" +
+      LISTINGS.map((l) => `  - ${l.name}: ${l.__id}`).join("\n")
   );
   process.exit(0);
 }

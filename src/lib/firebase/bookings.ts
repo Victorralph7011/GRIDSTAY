@@ -16,6 +16,9 @@ import {
   updateDoc,
   runTransaction,
   serverTimestamp,
+  query,
+  where,
+  orderBy,
 } from "firebase/firestore";
 import type { Bed } from "./beds";
 
@@ -98,6 +101,37 @@ export async function updateBooking(
   data: Partial<Pick<Booking, "status" | "contractId" | "paymentId">>
 ): Promise<void> {
   await updateDoc(doc(db, "bookings", bookingId), data);
+}
+
+/**
+ * Live list of a student's own bookings, newest first — powers
+ * /bookings ("My Bookings"). Requires a composite index on
+ * (studentId ASC, createdAt DESC); see firestore.indexes.json.
+ */
+export function subscribeToStudentBookings(
+  studentId: string,
+  callback: (bookings: Booking[]) => void,
+  onError?: (error: Error) => void
+): () => void {
+  const bookingsQuery = query(
+    collection(db, "bookings"),
+    where("studentId", "==", studentId),
+    orderBy("createdAt", "desc")
+  );
+
+  return onSnapshot(
+    bookingsQuery,
+    (snapshot) => {
+      const bookings = snapshot.docs.map(
+        (docSnap) => ({ id: docSnap.id, ...docSnap.data() }) as Booking
+      );
+      callback(bookings);
+    },
+    (error) => {
+      console.error("[GridStay] subscribeToStudentBookings failed:", error);
+      onError?.(error);
+    }
+  );
 }
 
 export type ConfirmBookingResult =

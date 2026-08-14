@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 import {
   LayoutGrid,
   IndianRupee,
@@ -66,8 +67,16 @@ export default function ServicesSection() {
         {/* Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {features.map((feat, i) => (
-            <motion.div
+            // `className="contents"` keeps the <a> out of the grid's
+            // layout tree so .feature-card is still the actual grid
+            // item — otherwise wrapping it here would break the
+            // grid-cols-3 sizing above.
+            <Link
               key={i}
+              href="/auth/signup?role=provider"
+              className="contents"
+            >
+            <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -114,6 +123,7 @@ export default function ServicesSection() {
                 Explore <ArrowRight size={16} />
               </div>
             </motion.div>
+            </Link>
           ))}
         </div>
       </div>

@@ -42,10 +42,14 @@ export default function Header() {
       </Link>
 
       <nav className="flex gap-8 items-center">
-        {["Discover", "For Owners", "Business OS"].map((label) => (
+        {[
+          { label: "Discover", id: "discover" },
+          { label: "For Owners", id: "owners" },
+          { label: "Business OS", id: "os" },
+        ].map(({ label, id }) => (
           <Link
             key={label}
-            href={`#${label.toLowerCase().replace(/\s+/g, "-")}`}
+            href={`#${id}`}
             className="no-underline hidden md:block"
             style={{
               fontFamily: "var(--font-body)",
