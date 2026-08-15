@@ -17,6 +17,7 @@ import {
 } from "@/lib/esign/contracts";
 import { createRentOrder } from "@/lib/razorpay/payments";
 import PriceBadge from "@/components/marketplace/PriceBadge";
+import { toISODate, fromISODate } from "@/components/marketplace/Calendar";
 
 type FlowStep =
   | "loading"
@@ -26,10 +27,14 @@ type FlowStep =
   | "confirmed"
   | "error";
 
+// Uses the shared local-date helpers rather than `new Date(iso)` +
+// toISOString(): the former parses "YYYY-MM-DD" as UTC midnight and
+// the latter converts back to UTC, which shifts the contract's end
+// date by a day for anyone east of Greenwich (including all of IST).
 const addMonths = (isoDate: string, months: number) => {
-  const d = new Date(isoDate);
+  const d = fromISODate(isoDate);
   d.setMonth(d.getMonth() + months);
-  return d.toISOString().split("T")[0];
+  return toISODate(d);
 };
 
 export default function BookingConfirmationPage() {
@@ -98,7 +103,9 @@ export default function BookingConfirmationPage() {
         monthlyRent: room.monthlyRent,
         securityDeposit: room.monthlyRent * 2,
         startDate: booking.moveInDate,
-        endDate: addMonths(booking.moveInDate, 11),
+        // `?? 11` keeps bookings created before tenure selection
+        // existed producing the same term they always did.
+        endDate: addMonths(booking.moveInDate, booking.tenureMonths ?? 11),
         termsMarkdown: "",
       });
 

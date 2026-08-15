@@ -86,7 +86,7 @@ export default function ListingDetailPage() {
     [rooms, selectedBed]
   );
 
-  const handleReserve = async (moveInDate: string) => {
+  const handleReserve = async (moveInDate: string, tenureMonths: number) => {
     if (!selectedBed || !selectedRoom || !property) return;
     if (!user) {
       router.push("/auth/login");
@@ -101,6 +101,7 @@ export default function ListingDetailPage() {
         roomId: selectedRoom.id,
         bedId: selectedBed.id,
         moveInDate,
+        tenureMonths,
       });
       router.push(`/booking/${bookingId}`);
     } catch {

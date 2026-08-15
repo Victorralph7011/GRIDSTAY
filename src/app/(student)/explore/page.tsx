@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import dynamic from "next/dynamic";
+import { Search, List, Map as MapIcon } from "lucide-react";
 import { subscribeToProperties, type Property } from "@/lib/firebase/properties";
 import MarketplaceHeader from "@/components/marketplace/MarketplaceHeader";
 import ListingCard from "@/components/marketplace/ListingCard";
@@ -11,6 +12,18 @@ import ExploreFilterBar, {
   type ExploreFilterState,
 } from "@/components/marketplace/ExploreFilterBar";
 
+// Leaflet touches `window` at module load, so it can never run during
+// SSR/static generation — ssr:false is required here, not optional.
+const ExploreMapView = dynamic(
+  () => import("@/components/marketplace/ExploreMapView"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-full bg-gs-offwhite animate-pulse" />
+    ),
+  }
+);
+
 export default function ExplorePage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,6 +31,24 @@ export default function ExplorePage() {
   const [filters, setFilters] = useState<ExploreFilterState>(
     DEFAULT_EXPLORE_FILTERS
   );
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  // Mobile only — desktop always shows both panes side by side.
+  const [mobileView, setMobileView] = useState<"list" | "map">("list");
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  // Leaflet measures its container on init and on every pan/zoom. If
+  // it's merely CSS-hidden (display:none) it initialises at zero size
+  // and its internal position cache breaks — the map then throws
+  // "_leaflet_pos of undefined" on interaction. So the map has to be
+  // genuinely unmounted when off-screen rather than hidden, which
+  // means tracking the breakpoint in JS instead of Tailwind alone.
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const sync = () => setIsDesktop(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   useEffect(() => {
     const unsubscribe = subscribeToProperties(
@@ -113,6 +144,37 @@ export default function ExplorePage() {
       />
 
       <section className="gs-container py-10">
+        {/* Mobile list/map toggle — desktop always shows both panes
+            side by side, so this only matters below the lg breakpoint. */}
+        {!loading && !loadError && filtered.length > 0 && (
+          <div className="lg:hidden flex justify-center mb-6">
+            <div className="inline-flex rounded-full border border-gs-lightgrey p-1 gap-1">
+              <button
+                type="button"
+                onClick={() => setMobileView("list")}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-bold uppercase tracking-[0.08em] transition-colors cursor-pointer ${
+                  mobileView === "list"
+                    ? "bg-gs-charcoal text-white"
+                    : "text-gs-midgrey"
+                }`}
+              >
+                <List size={13} /> List
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobileView("map")}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-bold uppercase tracking-[0.08em] transition-colors cursor-pointer ${
+                  mobileView === "map"
+                    ? "bg-gs-charcoal text-white"
+                    : "text-gs-midgrey"
+                }`}
+              >
+                <MapIcon size={13} /> Map
+              </button>
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -135,10 +197,37 @@ export default function ExplorePage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
-            {filtered.map((property) => (
-              <ListingCard key={property.id} property={property} />
-            ))}
+          <div className="flex flex-col lg:flex-row gap-8 lg:h-[72vh]">
+            {/* List pane — CSS-hiding is fine here (unlike the map,
+                which must unmount), so scroll position survives a
+                toggle back to the list on mobile. */}
+            <div
+              className={`${!isDesktop && mobileView === "map" ? "hidden" : "block"} lg:w-[56%] lg:h-full lg:overflow-y-auto lg:pr-2`}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-10">
+                {filtered.map((property) => (
+                  <ListingCard
+                    key={property.id}
+                    property={property}
+                    isHovered={hoveredId === property.id}
+                    onHover={setHoveredId}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Map pane — sticky so it stays put while the list
+                scrolls, same as Airbnb's split view. Mounted only when
+                actually visible; see the isDesktop note above. */}
+            {(isDesktop || mobileView === "map") && (
+              <div className="lg:w-[44%] h-[480px] lg:h-full lg:sticky lg:top-[156px] rounded-2xl overflow-hidden border border-gs-lightgrey">
+                <ExploreMapView
+                  properties={filtered.filter((p) => p.geopoint)}
+                  hoveredId={hoveredId}
+                  onHoverProperty={setHoveredId}
+                />
+              </div>
+            )}
           </div>
         )}
       </section>

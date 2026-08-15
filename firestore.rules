@@ -106,7 +106,11 @@ service cloud.firestore {
         request.resource.data.propertyId == resource.data.propertyId &&
         request.resource.data.roomId == resource.data.roomId &&
         request.resource.data.bedId == resource.data.bedId &&
-        request.resource.data.moveInDate == resource.data.moveInDate;
+        request.resource.data.moveInDate == resource.data.moveInDate &&
+        // Tenure defines the lease term the eSign contract is built
+        // from, so it's frozen alongside moveInDate — otherwise a
+        // student could shorten their commitment after signing.
+        request.resource.data.tenureMonths == resource.data.tenureMonths;
     }
 
     // ── reviews/{reviewId} ──

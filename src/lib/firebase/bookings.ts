@@ -38,6 +38,13 @@ export interface Booking {
   contractId?: string;
   paymentId?: string;
   moveInDate: string;
+  /**
+   * Lease length in months, chosen at reservation time. Optional
+   * because bookings created before tenure selection existed don't
+   * carry it — read it as `?? 11` (the prior hardcoded default) so
+   * older documents still produce a valid contract term.
+   */
+  tenureMonths?: number;
   createdAt?: unknown;
 }
 
@@ -53,6 +60,7 @@ export async function createPendingBooking(data: {
   roomId: string;
   bedId: string;
   moveInDate: string;
+  tenureMonths: number;
 }): Promise<string> {
   const ref = await addDoc(collection(db, "bookings"), {
     ...data,

@@ -8,12 +8,28 @@ import PriceBadge from "./PriceBadge";
 
 interface ListingCardProps {
   property: Property;
+  /** Highlights the card to mirror hovering its pin on the map. */
+  isHovered?: boolean;
+  onHover?: (id: string | null) => void;
 }
 
-export default function ListingCard({ property }: ListingCardProps) {
+export default function ListingCard({
+  property,
+  isHovered = false,
+  onHover,
+}: ListingCardProps) {
   return (
-    <Link href={`/listing/${property.id}`} className="group block no-underline">
-      <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-gs-lightgrey">
+    <Link
+      href={`/listing/${property.id}`}
+      className="group block no-underline"
+      onMouseEnter={() => onHover?.(property.id)}
+      onMouseLeave={() => onHover?.(null)}
+    >
+      <div
+        className={`relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-gs-lightgrey transition-shadow ${
+          isHovered ? "ring-2 ring-gs-charcoal ring-offset-2" : ""
+        }`}
+      >
         <Image
           src={property.coverImageUrl}
           alt={property.name}
