@@ -42,3 +42,6 @@ next-env.d.ts
 
 # claude code local session state — entire directory, not pushed
 .claude/
+
+.vercel
+.env*

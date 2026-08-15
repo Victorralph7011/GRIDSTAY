@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/lib/firebase/useAuth";
+import ProfileMenu from "@/components/auth/ProfileMenu";
 
 export default function Header() {
+  const { user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -71,32 +74,36 @@ export default function Header() {
           </Link>
         ))}
 
-        <Link
-          href="/auth/login"
-          className="no-underline"
-          style={{
-            fontFamily: "var(--font-body)",
-            fontSize: "13px",
-            fontWeight: 600,
-            textTransform: "uppercase",
-            letterSpacing: "0.06em",
-            color: "#111111",
-            padding: "10px 24px",
-            borderRadius: "9999px",
-            border: "1px solid #111111",
-            transition: "all 300ms",
-          }}
-          onMouseEnter={(e) => {
-            (e.target as HTMLElement).style.background = "#111111";
-            (e.target as HTMLElement).style.color = "#ffffff";
-          }}
-          onMouseLeave={(e) => {
-            (e.target as HTMLElement).style.background = "transparent";
-            (e.target as HTMLElement).style.color = "#111111";
-          }}
-        >
-          Login / Signup
-        </Link>
+        {user ? (
+          <ProfileMenu />
+        ) : (
+          <Link
+            href="/auth/login"
+            className="no-underline"
+            style={{
+              fontFamily: "var(--font-body)",
+              fontSize: "13px",
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              color: "#111111",
+              padding: "10px 24px",
+              borderRadius: "9999px",
+              border: "1px solid #111111",
+              transition: "all 300ms",
+            }}
+            onMouseEnter={(e) => {
+              (e.target as HTMLElement).style.background = "#111111";
+              (e.target as HTMLElement).style.color = "#ffffff";
+            }}
+            onMouseLeave={(e) => {
+              (e.target as HTMLElement).style.background = "transparent";
+              (e.target as HTMLElement).style.color = "#111111";
+            }}
+          >
+            Login / Signup
+          </Link>
+        )}
       </nav>
     </header>
   );

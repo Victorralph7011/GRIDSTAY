@@ -8,6 +8,7 @@ import {
   FileSignature,
   ArrowRight,
 } from "lucide-react";
+import { useAuth } from "@/lib/firebase/useAuth";
 
 const features = [
   {
@@ -28,6 +29,13 @@ const features = [
 ];
 
 export default function ServicesSection() {
+  const { user } = useAuth();
+  // An already-registered owner clicking through to "sign up as a
+  // provider" again is a dead end — send them straight to the
+  // dashboard these features actually live in instead.
+  const ctaHref =
+    user?.role === "provider" ? "/dashboard" : "/auth/signup?role=provider";
+
   return (
     <section
       id="os"
@@ -71,11 +79,7 @@ export default function ServicesSection() {
             // layout tree so .feature-card is still the actual grid
             // item — otherwise wrapping it here would break the
             // grid-cols-3 sizing above.
-            <Link
-              key={i}
-              href="/auth/signup?role=provider"
-              className="contents"
-            >
+            <Link key={i} href={ctaHref} className="contents">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}

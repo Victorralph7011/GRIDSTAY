@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useAuth } from "@/lib/firebase/useAuth";
+import ProfileMenu from "@/components/auth/ProfileMenu";
 
 /**
  * Sticky top bar for the student marketplace. Deliberately lighter
@@ -9,7 +10,7 @@ import { useAuth } from "@/lib/firebase/useAuth";
  * scroll content under it, so it stays opaque and bordered throughout.
  */
 export default function MarketplaceHeader() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
 
   return (
     <header className="sticky top-0 z-40 bg-gs-white/90 backdrop-blur-md border-b border-gs-lightgrey">
@@ -38,21 +39,7 @@ export default function MarketplaceHeader() {
           </Link>
 
           {user ? (
-            <>
-              <Link
-                href={user.role === "provider" ? "/dashboard" : "/bookings"}
-                className="no-underline text-[12px] font-semibold uppercase tracking-[0.08em] text-gs-darkgrey hover:text-gs-black transition-colors"
-              >
-                {user.role === "provider" ? "Dashboard" : "My Bookings"}
-              </Link>
-              <button
-                type="button"
-                onClick={() => signOut()}
-                className="text-[12px] font-semibold uppercase tracking-[0.08em] text-gs-midgrey hover:text-gs-black transition-colors cursor-pointer"
-              >
-                Sign Out
-              </button>
-            </>
+            <ProfileMenu />
           ) : (
             <Link
               href="/auth/login"
