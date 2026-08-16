@@ -26,6 +26,8 @@ export interface Bed {
   id: string;
   roomId: string;
   propertyId: string;
+  /** Denormalized owner id — see the note on Room.providerId. */
+  providerId?: string;
   position: number; // Bed number in room (1-4)
   status: BedStatus;
   tenantId?: string;

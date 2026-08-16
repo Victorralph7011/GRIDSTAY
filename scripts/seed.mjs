@@ -98,7 +98,15 @@ async function ensureAccount({ email, password }, role, displayName) {
   }
   await setDoc(
     doc(db, "users", cred.user.uid),
-    { email, role, displayName, createdAt: serverTimestamp() },
+    {
+      email,
+      role,
+      displayName,
+      // The seed provider already owns fully-formed listings, so it
+      // must not be bounced into the onboarding wizard on login.
+      ...(role === "provider" ? { onboardingComplete: true } : {}),
+      createdAt: serverTimestamp(),
+    },
     { merge: true }
   );
   return cred.user.uid;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -75,25 +75,47 @@ export function useAuth() {
     []
   );
 
+  /**
+   * True while signIn/signUp is running. Those functions own auth
+   * state for their duration and the listener must not fight them.
+   *
+   * Without this, signUp races itself: createUserWithEmailAndPassword
+   * signs the user in immediately, which fires onAuthStateChanged
+   * BEFORE signUp has written users/{uid}. The listener reads a doc
+   * that doesn't exist yet, resolves `null`, and its setState can land
+   * after signUp's — leaving `user: null` while `firebaseUser` is set,
+   * i.e. signed in but treated as signed out. That's what made the
+   * provider dashboard bounce straight back to the login page after a
+   * successful signup.
+   */
+  const manualAuthInFlight = useRef(false);
+
   /* ── Auth state listener ── */
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        const profile = await fetchUserProfile(firebaseUser);
-        setState({
-          user: profile,
-          firebaseUser,
-          loading: false,
-          error: null,
-        });
-      } else {
+      if (manualAuthInFlight.current) return;
+
+      if (!firebaseUser) {
         setState({
           user: null,
           firebaseUser: null,
           loading: false,
           error: null,
         });
+        return;
       }
+
+      const profile = await fetchUserProfile(firebaseUser);
+      // Re-check after the await: a manual op may have started while
+      // this fetch was in flight, and it holds the newer truth.
+      if (manualAuthInFlight.current) return;
+
+      setState({
+        user: profile,
+        firebaseUser,
+        loading: false,
+        error: null,
+      });
     });
     return unsubscribe;
   }, [fetchUserProfile]);
@@ -101,6 +123,7 @@ export function useAuth() {
   /* ── Sign In ── */
   const signIn = useCallback(
     async (email: string, password: string, expectedRole: UserRole) => {
+      manualAuthInFlight.current = true;
       setState((s) => ({ ...s, loading: true, error: null }));
       try {
         const cred = await signInWithEmailAndPassword(auth, email, password);
@@ -138,6 +161,8 @@ export function useAuth() {
         const message = mapFirebaseError(err);
         setState((s) => ({ ...s, loading: false, error: message }));
         return null;
+      } finally {
+        manualAuthInFlight.current = false;
       }
     },
     [fetchUserProfile]
@@ -152,6 +177,7 @@ export function useAuth() {
       displayName?: string,
       aadhaarNumber?: string
     ) => {
+      manualAuthInFlight.current = true;
       setState((s) => ({ ...s, loading: true, error: null }));
       try {
         const cred = await createUserWithEmailAndPassword(
@@ -168,8 +194,13 @@ export function useAuth() {
           createdAt: serverTimestamp(),
         };
 
-        if (role === "provider" && aadhaarNumber) {
-          userData.aadhaarNumber = aadhaarNumber;
+        if (role === "provider") {
+          if (aadhaarNumber) {
+            userData.aadhaarNumber = aadhaarNumber;
+          }
+          // New owners must complete the listing wizard before their
+          // dashboard is useful; students have nothing to onboard.
+          userData.onboardingComplete = false;
         }
 
         await setDoc(doc(db, "users", cred.user.uid), userData);
@@ -180,6 +211,7 @@ export function useAuth() {
           role,
           displayName,
           aadhaarNumber,
+          onboardingComplete: role === "provider" ? false : undefined,
         };
 
         setState({
@@ -193,6 +225,8 @@ export function useAuth() {
         const message = mapFirebaseError(err);
         setState((s) => ({ ...s, loading: false, error: message }));
         return null;
+      } finally {
+        manualAuthInFlight.current = false;
       }
     },
     []

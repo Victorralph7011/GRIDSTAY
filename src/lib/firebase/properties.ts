@@ -61,6 +61,14 @@ export interface Property {
 export interface Room {
   id: string;
   propertyId: string;
+  /**
+   * Denormalized owner id. Duplicated from the parent property so the
+   * security rules can authorize a room write without a cross-document
+   * lookup — the onboarding wizard creates a property and its rooms in
+   * one batch, where the parent isn't committed yet. Optional because
+   * rooms seeded before this field existed don't carry it.
+   */
+  providerId?: string;
   sharingType: SharingType;
   monthlyRent: number;
   photoUrls: string[];
@@ -103,6 +111,40 @@ export function subscribeToProperties(
     },
     (error) => {
       console.error("[GridStay] subscribeToProperties failed:", error);
+      onError?.(error);
+    }
+  );
+}
+
+/**
+ * Live list of one provider's own properties.
+ *
+ * Separate from subscribeToProperties, which hard-filters
+ * `verified == true` for the public marketplace — a provider must be
+ * able to see their own listing while it's still awaiting review,
+ * otherwise a freshly submitted property looks like it vanished.
+ */
+export function subscribeToProviderProperties(
+  providerId: string,
+  callback: (properties: Property[]) => void,
+  onError?: (error: Error) => void
+): () => void {
+  const q = query(
+    collection(db, "properties"),
+    where("providerId", "==", providerId)
+  );
+
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      callback(
+        snapshot.docs.map(
+          (docSnap) => ({ id: docSnap.id, ...docSnap.data() }) as Property
+        )
+      );
+    },
+    (error) => {
+      console.error("[GridStay] subscribeToProviderProperties failed:", error);
       onError?.(error);
     }
   );

@@ -63,7 +63,9 @@ function SignupPageContent() {
       role === "provider" ? aadhaarNumber.replace(/\s/g, "") : undefined
     );
     if (profile) {
-      router.push(profile.role === "provider" ? "/dashboard" : "/explore");
+      // A brand-new owner has no listings yet, so the dashboard would
+      // just be an empty state — send them straight into the wizard.
+      router.push(profile.role === "provider" ? "/onboarding" : "/explore");
     }
   };
 
@@ -211,7 +213,7 @@ function SignupPageContent() {
 
         {/* Footer */}
         <div className="flex justify-center w-full">
-          <Link href="/auth/login" className="text-[11px] font-bold tracking-widest uppercase text-black/40 hover:text-black transition-colors">
+          <Link href={`/auth/login?role=${role}`} className="text-[11px] font-bold tracking-widest uppercase text-black/40 hover:text-black transition-colors">
             Sign In Instead
           </Link>
         </div>

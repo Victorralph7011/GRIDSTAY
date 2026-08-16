@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/firebase/useAuth";
 import ProfileMenu from "@/components/auth/ProfileMenu";
 
 export default function Header() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -74,7 +74,15 @@ export default function Header() {
           </Link>
         ))}
 
-        {user ? (
+        {/* Neutral placeholder while auth resolves — see the note in
+            MarketplaceHeader; a flashed "Login / Signup" pill reads as
+            being signed out. */}
+        {loading ? (
+          <div
+            className="w-9 h-9 rounded-full bg-black/10 animate-pulse"
+            aria-hidden
+          />
+        ) : user ? (
           <ProfileMenu />
         ) : (
           <Link

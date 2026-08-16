@@ -50,14 +50,41 @@ service cloud.firestore {
       allow delete: if isSignedIn() && resource.data.providerId == request.auth.uid;
     }
 
+    // ── propertyVerifications/{propertyId} ──
+    // Government ID / ownership-proof details for a listing. These are
+    // deliberately NOT on the properties doc: that one is world-
+    // readable so signed-out visitors can browse /explore, and putting
+    // ID documents there would publish them to the internet. Only the
+    // owning provider can read or write their own. Review staff would
+    // read these out-of-band (Firebase console / admin SDK), which
+    // bypasses rules — no public or cross-provider read is granted.
+    match /propertyVerifications/{propertyId} {
+      allow read, write: if isSignedIn() &&
+        request.auth.uid == (
+          request.resource == null
+            ? resource.data.providerId
+            : request.resource.data.providerId
+        );
+    }
+
     // ── rooms/{roomId} ──
-    // Public read (needed on the listing detail page). Writes scoped
-    // to the parent property's owner via a lookup, since rooms don't
-    // carry their own providerId field.
+    // Public read (needed on the listing detail page).
+    //
+    // `create` checks a denormalized providerId on the incoming doc
+    // rather than get()-ing the parent property. The onboarding wizard
+    // writes property + rooms + beds in ONE batch, so at rules-eval
+    // time the parent property may not be committed yet and the
+    // lookup would fail. update/delete keep the isOwnerOf() lookup as
+    // a fallback so rooms seeded before providerId existed stay
+    // manageable.
     match /rooms/{roomId} {
       allow read: if true;
-      allow create: if isOwnerOf(request.resource.data.propertyId);
-      allow update, delete: if isOwnerOf(resource.data.propertyId);
+      allow create: if isSignedIn() &&
+        request.resource.data.providerId == request.auth.uid;
+      allow update, delete: if isSignedIn() && (
+        resource.data.get('providerId', '') == request.auth.uid ||
+        isOwnerOf(resource.data.propertyId)
+      );
     }
 
     // ── beds/{bedId} ──
@@ -74,9 +101,17 @@ service cloud.firestore {
       allow read: if true;
       // `resource` is null on create — the incoming doc is only
       // readable via `request.resource`, so these must stay split.
-      allow create: if isOwnerOf(request.resource.data.propertyId);
-      allow delete: if isOwnerOf(resource.data.propertyId);
-      allow update: if isOwnerOf(resource.data.propertyId) || (
+      // Same denormalized-providerId rationale as rooms above: beds are
+      // created in the same batch as their parent property, so an
+      // isOwnerOf() lookup can't be relied on at create time.
+      allow create: if isSignedIn() &&
+        request.resource.data.providerId == request.auth.uid;
+      allow delete: if isSignedIn() && (
+        resource.data.get('providerId', '') == request.auth.uid ||
+        isOwnerOf(resource.data.propertyId)
+      );
+      allow update: if isOwnerOf(resource.data.propertyId) ||
+        resource.data.get('providerId', '') == request.auth.uid || (
         isSignedIn() &&
         resource.data.status == "available" &&
         request.resource.data.status == "occupied" &&

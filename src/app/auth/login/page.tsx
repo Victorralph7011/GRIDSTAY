@@ -1,17 +1,29 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth, type UserRole } from "@/lib/firebase/useAuth";
 import EchoStackLogo from "@/components/ui/EchoStackLogo";
 
+/** useSearchParams needs a Suspense boundary or `next build` fails. */
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageContent />
+    </Suspense>
+  );
+}
+
+function LoginPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { signIn, loading, error, clearError } = useAuth();
 
-  const [role, setRole] = useState<UserRole>("student");
+  const [role, setRole] = useState<UserRole>(
+    searchParams.get("role") === "provider" ? "provider" : "student"
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showToast, setShowToast] = useState(false);
@@ -135,8 +147,12 @@ export default function LoginPage() {
 
         {/* Footer Links */}
         <div className="flex justify-center items-center gap-6 w-full">
+          {/* Carries the chosen role across. Without it the signup
+              toggle silently reset to Student, so someone who picked
+              "Hostel Owner" here created a student account and then
+              got "registered as a student" on their next login. */}
           <Link
-            href="/auth/signup"
+            href={`/auth/signup?role=${role}`}
             className="text-[11px] font-bold tracking-widest uppercase text-black/40 hover:text-black transition-colors"
           >
             Get Started

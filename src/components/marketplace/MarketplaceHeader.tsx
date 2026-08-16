@@ -10,7 +10,7 @@ import ProfileMenu from "@/components/auth/ProfileMenu";
  * scroll content under it, so it stays opaque and bordered throughout.
  */
 export default function MarketplaceHeader() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
   return (
     <header className="sticky top-0 z-40 bg-gs-white/90 backdrop-blur-md border-b border-gs-lightgrey">
@@ -38,7 +38,16 @@ export default function MarketplaceHeader() {
             Explore
           </Link>
 
-          {user ? (
+          {/* While auth resolves, show a neutral placeholder rather
+              than the Login pill — otherwise every page load flashes
+              "LOGIN" at an already-signed-in user, which reads as
+              being logged out or asked to log in again. */}
+          {loading ? (
+            <div
+              className="w-9 h-9 rounded-full bg-gs-lightgrey animate-pulse"
+              aria-hidden
+            />
+          ) : user ? (
             <ProfileMenu />
           ) : (
             <Link
