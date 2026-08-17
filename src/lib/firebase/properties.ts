@@ -19,6 +19,7 @@ import {
   getDocs,
   addDoc,
   updateDoc,
+  writeBatch,
   serverTimestamp,
 } from "firebase/firestore";
 
@@ -184,6 +185,46 @@ export async function updateProperty(
     ...data,
     updatedAt: serverTimestamp(),
   });
+}
+
+/**
+ * Change a room's rent, keeping every denormalized copy in sync.
+ *
+ * Rent is stored in three places by design — on the room, on each of
+ * its beds (so a bed is self-describing in the booking flow), and
+ * rolled up into the property's priceRange (so the explore grid can
+ * filter without fanning out). Updating only the room would leave the
+ * marketplace advertising a stale price and the booking flow charging
+ * the old one, so all three move together in a single batch.
+ *
+ * `allRooms` is the property's full room list with this room's NEW
+ * rent already applied; it's needed to recompute priceRange across
+ * siblings.
+ */
+export async function updateRoomRent(
+  propertyId: string,
+  roomId: string,
+  newRent: number,
+  allRooms: Room[]
+): Promise<void> {
+  const batch = writeBatch(db);
+
+  batch.update(doc(db, "rooms", roomId), { monthlyRent: newRent });
+
+  const bedsSnap = await getDocs(
+    query(collection(db, "beds"), where("roomId", "==", roomId))
+  );
+  bedsSnap.docs.forEach((bed) =>
+    batch.update(bed.ref, { monthlyRent: newRent })
+  );
+
+  const rents = allRooms.map((r) => r.monthlyRent);
+  batch.update(doc(db, "properties", propertyId), {
+    priceRange: { min: Math.min(...rents), max: Math.max(...rents) },
+    updatedAt: serverTimestamp(),
+  });
+
+  await batch.commit();
 }
 
 /**

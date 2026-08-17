@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
+import { ChevronLeft, Pencil } from "lucide-react";
+import MarketplaceHeader from "@/components/marketplace/MarketplaceHeader";
 import { getProperty, getRoomsByProperty, type Property, type Room } from "@/lib/firebase/properties";
 import { subscribeToBeds, updateBedStatus, type Bed } from "@/lib/firebase/beds";
 import { useAuth } from "@/lib/firebase/useAuth";
@@ -100,10 +103,27 @@ export default function ProviderPropertyInventoryPage() {
 
   return (
     <div className="min-h-screen bg-gs-white text-gs-charcoal">
+      <MarketplaceHeader />
+
       <div className="gs-container py-10 flex flex-col gap-8">
-        <div>
-          <h1 className="text-3xl mb-1">{property.name}</h1>
-          <p className="text-gs-midgrey text-sm">Bed-level inventory</p>
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.08em] text-gs-midgrey hover:text-gs-charcoal no-underline mb-2"
+            >
+              <ChevronLeft size={14} /> Dashboard
+            </Link>
+            <h1 className="text-3xl mb-1">{property.name}</h1>
+            <p className="text-gs-midgrey text-sm">Bed-level inventory</p>
+          </div>
+
+          <Link
+            href={`/properties/${property.id}/edit`}
+            className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.08em] text-gs-charcoal px-6 py-3 rounded-full border border-gs-charcoal no-underline hover:bg-gs-charcoal hover:text-white transition-colors"
+          >
+            <Pencil size={14} /> Edit listing
+          </Link>
         </div>
 
         {actionError && <p className="text-sm text-red-600">{actionError}</p>}

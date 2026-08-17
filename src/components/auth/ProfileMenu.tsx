@@ -78,7 +78,26 @@ export default function ProfileMenu() {
             {primaryLabel}
           </Link>
 
-          {user.role === "student" && (
+          {/* The header's section links are hidden below `sm`, so the
+              menu carries them for mobile. */}
+          {user.role === "provider" ? (
+            <>
+              <Link
+                href="/tenants"
+                onClick={() => setOpen(false)}
+                className="block px-4 py-2.5 text-sm text-gs-charcoal hover:bg-gs-offwhite no-underline"
+              >
+                Tenants
+              </Link>
+              <Link
+                href="/maintenance"
+                onClick={() => setOpen(false)}
+                className="block px-4 py-2.5 text-sm text-gs-charcoal hover:bg-gs-offwhite no-underline"
+              >
+                Maintenance
+              </Link>
+            </>
+          ) : (
             <Link
               href="/explore"
               onClick={() => setOpen(false)}

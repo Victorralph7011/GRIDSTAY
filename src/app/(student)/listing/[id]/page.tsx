@@ -97,6 +97,10 @@ export default function ListingDetailPage() {
     try {
       const bookingId = await createPendingBooking({
         studentId: user.uid,
+        // Copied onto the booking so the property owner can identify
+        // their tenant — profile docs aren't readable across accounts.
+        studentName: user.displayName?.trim() || "GridStay Student",
+        studentEmail: user.email ?? "",
         propertyId: property.id,
         roomId: selectedRoom.id,
         bedId: selectedBed.id,

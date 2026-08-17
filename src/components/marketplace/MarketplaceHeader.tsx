@@ -31,12 +31,37 @@ export default function MarketplaceHeader() {
         </Link>
 
         <nav className="flex items-center gap-2 sm:gap-6">
-          <Link
-            href="/explore"
-            className="hidden sm:block no-underline text-[12px] font-semibold uppercase tracking-[0.08em] text-gs-darkgrey hover:text-gs-black transition-colors"
-          >
-            Explore
-          </Link>
+          {/* Owners get their operational sections here; everyone else
+              gets the marketplace entry point. */}
+          {user?.role === "provider" ? (
+            <>
+              <Link
+                href="/dashboard"
+                className="hidden sm:block no-underline text-[12px] font-semibold uppercase tracking-[0.08em] text-gs-darkgrey hover:text-gs-black transition-colors"
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/tenants"
+                className="hidden sm:block no-underline text-[12px] font-semibold uppercase tracking-[0.08em] text-gs-darkgrey hover:text-gs-black transition-colors"
+              >
+                Tenants
+              </Link>
+              <Link
+                href="/maintenance"
+                className="hidden sm:block no-underline text-[12px] font-semibold uppercase tracking-[0.08em] text-gs-darkgrey hover:text-gs-black transition-colors"
+              >
+                Maintenance
+              </Link>
+            </>
+          ) : (
+            <Link
+              href="/explore"
+              className="hidden sm:block no-underline text-[12px] font-semibold uppercase tracking-[0.08em] text-gs-darkgrey hover:text-gs-black transition-colors"
+            >
+              Explore
+            </Link>
+          )}
 
           {/* While auth resolves, show a neutral placeholder rather
               than the Login pill — otherwise every page load flashes

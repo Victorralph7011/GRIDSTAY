@@ -31,6 +31,20 @@ export type BookingStatus =
 export interface Booking {
   id: string;
   studentId: string;
+  /**
+   * Denormalized tenant identity, written by the student about
+   * themselves at booking time.
+   *
+   * Required because the security rules only let a user read their
+   * OWN users/{uid} document — so a provider can see `studentId` on a
+   * booking for their property but could never resolve it to a person.
+   * Copying name/email onto the booking (which the property's owner is
+   * already permitted to read) is what makes the tenants list
+   * possible without widening profile reads across accounts.
+   * Optional: bookings created before this existed don't carry it.
+   */
+  studentName?: string;
+  studentEmail?: string;
   propertyId: string;
   roomId: string;
   bedId: string;
@@ -56,6 +70,8 @@ export interface Booking {
  */
 export async function createPendingBooking(data: {
   studentId: string;
+  studentName: string;
+  studentEmail: string;
   propertyId: string;
   roomId: string;
   bedId: string;
@@ -137,6 +153,39 @@ export function subscribeToStudentBookings(
     },
     (error) => {
       console.error("[GridStay] subscribeToStudentBookings failed:", error);
+      onError?.(error);
+    }
+  );
+}
+
+/**
+ * Live confirmed bookings for one property — the provider's tenant
+ * list. Scoped per property rather than per provider because the
+ * bookings read rule authorizes via the property's owner, and a
+ * providerId field doesn't exist on bookings.
+ */
+export function subscribeToPropertyBookings(
+  propertyId: string,
+  callback: (bookings: Booking[]) => void,
+  onError?: (error: Error) => void
+): () => void {
+  const q = query(
+    collection(db, "bookings"),
+    where("propertyId", "==", propertyId),
+    where("status", "==", "confirmed")
+  );
+
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      callback(
+        snapshot.docs.map(
+          (docSnap) => ({ id: docSnap.id, ...docSnap.data() }) as Booking
+        )
+      );
+    },
+    (error) => {
+      console.error("[GridStay] subscribeToPropertyBookings failed:", error);
       onError?.(error);
     }
   );

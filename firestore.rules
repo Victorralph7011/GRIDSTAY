@@ -148,6 +148,22 @@ service cloud.firestore {
         request.resource.data.tenureMonths == resource.data.tenureMonths;
     }
 
+    // ── maintenanceTickets/{ticketId} ──
+    // Operational data, not public: only the owning provider can see
+    // or touch their queue. Authorized off a denormalized providerId
+    // (no cross-document lookup), and providerId is pinned on update
+    // so a ticket can't be moved to another account.
+    match /maintenanceTickets/{ticketId} {
+      allow read, delete: if isSignedIn() &&
+        resource.data.providerId == request.auth.uid;
+      allow create: if isSignedIn() &&
+        request.resource.data.providerId == request.auth.uid &&
+        request.resource.data.status == "open";
+      allow update: if isSignedIn() &&
+        resource.data.providerId == request.auth.uid &&
+        request.resource.data.providerId == resource.data.providerId;
+    }
+
     // ── reviews/{reviewId} ──
     // Public read. Only the author can create/edit/delete their own.
     match /reviews/{reviewId} {
