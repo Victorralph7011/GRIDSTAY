@@ -1,0 +1,570 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════
+   GRIDSTAY DESIGN SYSTEM — Tailwind v4
+   Monochromatic · Swiss Type · Locomotive Feel
+═══════════════════════════════════════════════ */
+
+@theme inline {
+  /* ── Color Palette ── */
+  --color-gs-white: #FFFFFF;
+  --color-gs-offwhite: #F7F7F7;
+  --color-gs-lightgrey: #EDEDED;
+  --color-gs-midgrey: #838282;
+  --color-gs-darkgrey: #333333;
+  --color-gs-charcoal: #111111;
+  --color-gs-black: #000000;
+
+  /* ── Echo Stack Grays ── */
+  --color-echo-1: #e0e0e0;
+  --color-echo-2: #d6d6d6;
+  --color-echo-3: #cccccc;
+  --color-echo-4: #c2c2c2;
+
+  /* ── Typography ── */
+  --font-display: 'Clash Display', sans-serif;
+  --font-body: 'Satoshi', sans-serif;
+
+  /* ── Layout ── */
+  --gs-container: 1280px;
+
+  /* ── Motion ── */
+  --gs-transition: 700ms cubic-bezier(0.77, 0, 0.175, 1);
+  --gs-transition-fast: 300ms cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+/* ── Global Resets ──
+   Must live inside @layer base. Unlayered CSS outranks all layered CSS
+   in the cascade, so a bare universal margin/padding reset here would
+   silently beat every Tailwind padding and margin utility (they ship
+   in @layer utilities) and null out spacing app-wide. */
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+}
+
+body {
+  background-color: var(--color-gs-white);
+  color: var(--color-gs-charcoal);
+  font-family: var(--font-body);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+/* ── Selection ── */
+::selection {
+  background: var(--color-gs-charcoal);
+  color: var(--color-gs-white);
+}
+
+/* ── Container Utility ── */
+.gs-container {
+  max-width: var(--gs-container);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: max(24px, 4vw);
+  padding-right: max(24px, 4vw);
+}
+
+/* ── Buttons ── */
+.btn-dark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 36px;
+  background: var(--color-gs-charcoal);
+  color: var(--color-gs-white);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: none;
+  cursor: pointer;
+  transition: all var(--gs-transition-fast);
+  text-decoration: none;
+}
+
+.btn-dark:hover {
+  background: var(--color-gs-black);
+}
+
+.btn-light {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 36px;
+  background: var(--color-gs-white);
+  color: var(--color-gs-charcoal);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: none;
+  cursor: pointer;
+  transition: all var(--gs-transition-fast);
+  text-decoration: none;
+}
+
+.btn-light:hover {
+  background: var(--color-gs-lightgrey);
+}
+
+.btn-outline-light {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 36px;
+  background: transparent;
+  color: var(--color-gs-white);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all var(--gs-transition-fast);
+  text-decoration: none;
+}
+
+.btn-outline-light:hover {
+  border-color: var(--color-gs-white);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ── Feature Card Styles ── */
+.feature-card {
+  background: var(--color-gs-white);
+  border: 1px solid var(--color-gs-lightgrey);
+  border-radius: 16px;
+  padding: 48px 36px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition: all var(--gs-transition);
+}
+
+.feature-card:hover {
+  border-color: #d0d0d0;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
+}
+
+.feature-card .icon-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--color-gs-charcoal);
+  color: var(--color-gs-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+
+.feature-card .bg-shape {
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: var(--color-gs-offwhite);
+  z-index: 0;
+  transition: transform var(--gs-transition);
+}
+
+.feature-card:hover .bg-shape {
+  transform: scale(1.15);
+}
+
+/* ── Listing Card (Marketplace) ──
+   Same white/border/hover language as .feature-card, laid out for a
+   photo-forward card instead of an icon+text feature block. */
+.listing-card {
+  background: var(--color-gs-white);
+  border: 1px solid var(--color-gs-lightgrey);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all var(--gs-transition);
+}
+
+.listing-card:hover {
+  border-color: #d0d0d0;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
+}
+
+/* ── Pulse Animation (Verified Badge) ── */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* ── Smooth Scroll (Lenis overrides) ── */
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════════════
+   AUTH PAGES — Glassmorphic Design System
+   Inspired by Kavach Sathi reference
+═══════════════════════════════════════════════════ */
+
+/* ── Page Wrapper ── */
+.auth-page-wrapper {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  overflow: hidden;
+}
+
+/* ── Blurred Organic Background ──
+   Deliberately higher-contrast than a flat wash: the frosted card
+   only reads as glass if there is something varied behind it to
+   refract. Keep some darker anchors in the mix. */
+.auth-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 70% 55% at 18% 25%, rgba(148, 163, 190, 0.75) 0%, transparent 68%),
+    radial-gradient(ellipse 65% 50% at 82% 72%, rgba(120, 138, 168, 0.6) 0%, transparent 62%),
+    radial-gradient(ellipse 55% 45% at 62% 18%, rgba(186, 199, 220, 0.65) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 70% at 40% 88%, rgba(160, 174, 198, 0.5) 0%, transparent 65%);
+  background-color: #dfe5ee;
+  filter: blur(40px);
+}
+
+.auth-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle 200px at 25% 45%, rgba(126, 145, 178, 0.55) 0%, transparent 100%),
+    radial-gradient(circle 240px at 78% 32%, rgba(140, 158, 188, 0.45) 0%, transparent 100%),
+    radial-gradient(circle 170px at 55% 78%, rgba(150, 165, 192, 0.45) 0%, transparent 100%),
+    radial-gradient(circle 210px at 35% 65%, rgba(132, 150, 182, 0.4) 0%, transparent 100%);
+  filter: blur(24px);
+}
+
+/* ── Glass Card ──
+   White opacity has to stay high enough to separate from a light
+   backdrop — at 0.05 the card disappears and reads as a flat panel
+   with the form floating loose on the page. */
+.glass-card {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 460px;
+  padding: 48px 44px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 24px;
+  box-shadow:
+    0 24px 60px rgba(31, 41, 66, 0.16),
+    0 2px 8px rgba(31, 41, 66, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+@media (max-width: 480px) {
+  .glass-card {
+    padding: 36px 24px;
+    border-radius: 16px;
+  }
+}
+
+/* ── Role Toggle ── */
+.role-toggle-container {
+  margin-bottom: 36px;
+}
+
+.role-toggle-track {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: rgba(26, 31, 54, 0.06);
+  border-radius: 12px;
+  padding: 4px;
+  overflow: hidden;
+}
+
+.role-toggle-btn {
+  position: relative;
+  z-index: 2;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(26, 31, 54, 0.4);
+  cursor: pointer;
+  transition: color 300ms ease;
+  border-radius: 8px;
+}
+
+.role-toggle-btn.active {
+  color: #1a1f36;
+}
+
+.role-toggle-indicator {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  height: calc(100% - 8px);
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  z-index: 1;
+}
+
+/* ── Heading ── */
+.glass-heading {
+  font-family: var(--font-display) !important;
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a1f36;
+  margin-bottom: 6px;
+  letter-spacing: -0.02em;
+}
+
+.glass-subheading {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(26, 31, 54, 0.45);
+  margin-bottom: 36px;
+}
+
+/* ── Form ── */
+.glass-form {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.glass-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.glass-label {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(26, 31, 54, 0.45);
+  margin-bottom: 8px;
+}
+
+.glass-input {
+  width: 100%;
+  padding: 12px 0;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
+  color: #1a1f36;
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid rgba(26, 31, 54, 0.12);
+  outline: none;
+  transition: border-color 300ms ease;
+}
+
+.glass-input::placeholder {
+  color: rgba(26, 31, 54, 0.2);
+}
+
+.glass-input:focus {
+  border-bottom-color: #1a1f36;
+}
+
+.glass-hint {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: rgba(26, 31, 54, 0.35);
+  margin-top: 6px;
+}
+
+/* ── Submit Button ── */
+.glass-submit-btn {
+  width: 100%;
+  padding: 16px 24px;
+  margin-top: 8px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: #1a1f36;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 300ms ease, box-shadow 300ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+}
+
+.glass-submit-btn:hover {
+  background: #0f1225;
+  box-shadow: 0 6px 24px rgba(26, 31, 54, 0.25);
+}
+
+.glass-submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* ── Footer Links ── */
+.glass-footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  margin-top: 28px;
+}
+
+.glass-link {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(26, 31, 54, 0.4);
+  text-decoration: none;
+  transition: color 300ms ease;
+}
+
+.glass-link:hover {
+  color: #1a1f36;
+}
+
+/* ── Toast Notification ── */
+.glass-toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px;
+  background: rgba(26, 31, 54, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  max-width: 420px;
+}
+
+.glass-toast-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff4d4d;
+  flex-shrink: 0;
+}
+
+/* ── Loading Spinner ── */
+.glass-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: glass-spin 0.6s linear infinite;
+}
+
+@keyframes glass-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Explore Map Pins ──
+   Leaflet's divIcon wrapper is anchored at [0,0] in
+   ExploreMapView.tsx; this transform is what actually centers a
+   variable-width price pill on its lat/lng point, independent of the
+   label's length. */
+.gs-map-pin-wrapper {
+  background: transparent;
+  border: none;
+}
+
+.gs-map-pin {
+  transform: translate(-50%, -50%);
+  background: var(--color-gs-white);
+  border: 1px solid var(--color-gs-lightgrey);
+  border-radius: 9999px;
+  padding: 6px 12px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--color-gs-charcoal);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 150ms ease, background 150ms ease, color 150ms ease;
+}
+
+.gs-map-pin--active {
+  background: var(--color-gs-charcoal);
+  color: var(--color-gs-white);
+  border-color: var(--color-gs-charcoal);
+  transform: translate(-50%, -50%) scale(1.12);
+  z-index: 1000 !important;
+}
+
+/* Leaflet's own chrome (zoom controls, attribution) kept but
+   restyled to sit quietly within the monochrome palette. */
+.leaflet-container {
+  font-family: var(--font-body);
+}

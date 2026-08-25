@@ -1,0 +1,175 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwnerOf(propertyId) {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/properties/$(propertyId)).data.providerId == request.auth.uid;
+    }
+
+    // ── users/{uid} ──
+    // Profile data (incl. Aadhaar number) is only visible to its owner.
+    // Role has no other authority behind it (no custom claims, no admin
+    // SDK) — self-declaring a role at signup is unavoidable, but once
+    // set it must be frozen, or a student could rewrite their own doc
+    // to role:"provider" and immediately pass isOwnerOf() everywhere.
+    match /users/{uid} {
+      allow read, create: if isSignedIn() && request.auth.uid == uid;
+      allow update: if isSignedIn() && request.auth.uid == uid &&
+        request.resource.data.role == resource.data.role;
+    }
+
+    // ── properties/{propertyId} ──
+    // Public read so the explore page works for signed-out visitors.
+    // Only the owning provider can create/edit their own property.
+    // New listings are forced unverified with a clean rating slate —
+    // otherwise a provider could self-verify or fabricate a rating on
+    // creation. `update` additionally pins providerId/verified/rating
+    // so a listing can't be handed off to another account or have its
+    // trust signals edited directly; verification and rating changes
+    // have to happen through a separate trusted path (manual console
+    // edit today, an admin/review-aggregation flow later).
+    match /properties/{propertyId} {
+      allow read: if true;
+      allow create: if isSignedIn() &&
+        request.resource.data.providerId == request.auth.uid &&
+        request.resource.data.verified == false &&
+        request.resource.data.ratingAvg == 0 &&
+        request.resource.data.ratingCount == 0;
+      allow update: if isSignedIn() &&
+        resource.data.providerId == request.auth.uid &&
+        request.resource.data.providerId == resource.data.providerId &&
+        request.resource.data.verified == resource.data.verified &&
+        request.resource.data.ratingAvg == resource.data.ratingAvg &&
+        request.resource.data.ratingCount == resource.data.ratingCount;
+      allow delete: if isSignedIn() && resource.data.providerId == request.auth.uid;
+    }
+
+    // ── propertyVerifications/{propertyId} ──
+    // Government ID / ownership-proof details for a listing. These are
+    // deliberately NOT on the properties doc: that one is world-
+    // readable so signed-out visitors can browse /explore, and putting
+    // ID documents there would publish them to the internet. Only the
+    // owning provider can read or write their own. Review staff would
+    // read these out-of-band (Firebase console / admin SDK), which
+    // bypasses rules — no public or cross-provider read is granted.
+    match /propertyVerifications/{propertyId} {
+      allow read, write: if isSignedIn() &&
+        request.auth.uid == (
+          request.resource == null
+            ? resource.data.providerId
+            : request.resource.data.providerId
+        );
+    }
+
+    // ── rooms/{roomId} ──
+    // Public read (needed on the listing detail page).
+    //
+    // `create` checks a denormalized providerId on the incoming doc
+    // rather than get()-ing the parent property. The onboarding wizard
+    // writes property + rooms + beds in ONE batch, so at rules-eval
+    // time the parent property may not be committed yet and the
+    // lookup would fail. update/delete keep the isOwnerOf() lookup as
+    // a fallback so rooms seeded before providerId existed stay
+    // manageable.
+    match /rooms/{roomId} {
+      allow read: if true;
+      allow create: if isSignedIn() &&
+        request.resource.data.providerId == request.auth.uid;
+      allow update, delete: if isSignedIn() && (
+        resource.data.get('providerId', '') == request.auth.uid ||
+        isOwnerOf(resource.data.propertyId)
+      );
+    }
+
+    // ── beds/{bedId} ──
+    // Public read (live availability). Two distinct write paths:
+    // 1. The owning provider can fully manage a bed (maintenance
+    //    toggle, manual tenant assign/remove).
+    // 2. A signed-in student can flip ONLY their own currently-
+    //    available bed to occupied with themselves as tenant, and
+    //    ONLY those two fields — this is what the booking-confirmation
+    //    transaction in bookings.ts needs in order to work at all.
+    //    It intentionally cannot mark a bed available/maintenance or
+    //    assign someone else as tenant.
+    match /beds/{bedId} {
+      allow read: if true;
+      // `resource` is null on create — the incoming doc is only
+      // readable via `request.resource`, so these must stay split.
+      // Same denormalized-providerId rationale as rooms above: beds are
+      // created in the same batch as their parent property, so an
+      // isOwnerOf() lookup can't be relied on at create time.
+      allow create: if isSignedIn() &&
+        request.resource.data.providerId == request.auth.uid;
+      allow delete: if isSignedIn() && (
+        resource.data.get('providerId', '') == request.auth.uid ||
+        isOwnerOf(resource.data.propertyId)
+      );
+      allow update: if isOwnerOf(resource.data.propertyId) ||
+        resource.data.get('providerId', '') == request.auth.uid || (
+        isSignedIn() &&
+        resource.data.status == "available" &&
+        request.resource.data.status == "occupied" &&
+        request.resource.data.tenantId == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status", "tenantId"])
+      );
+    }
+
+    // ── bookings/{bookingId} ──
+    // Only the booking's own student or the relevant property's
+    // provider can read it. Students create their own bookings and
+    // may progress status/contractId/paymentId forward (the booking
+    // half of the same atomic transaction covered by the beds rule
+    // above); they cannot reassign a booking to a different bed or
+    // student after creation.
+    match /bookings/{bookingId} {
+      allow read: if isSignedIn() && (
+        resource.data.studentId == request.auth.uid ||
+        isOwnerOf(resource.data.propertyId)
+      );
+      allow create: if isSignedIn() &&
+        request.resource.data.studentId == request.auth.uid &&
+        request.resource.data.status == "pending_esign";
+      allow update: if isSignedIn() &&
+        resource.data.studentId == request.auth.uid &&
+        request.resource.data.studentId == resource.data.studentId &&
+        request.resource.data.propertyId == resource.data.propertyId &&
+        request.resource.data.roomId == resource.data.roomId &&
+        request.resource.data.bedId == resource.data.bedId &&
+        request.resource.data.moveInDate == resource.data.moveInDate &&
+        // Tenure defines the lease term the eSign contract is built
+        // from, so it's frozen alongside moveInDate — otherwise a
+        // student could shorten their commitment after signing.
+        request.resource.data.tenureMonths == resource.data.tenureMonths;
+    }
+
+    // ── maintenanceTickets/{ticketId} ──
+    // Operational data, not public: only the owning provider can see
+    // or touch their queue. Authorized off a denormalized providerId
+    // (no cross-document lookup), and providerId is pinned on update
+    // so a ticket can't be moved to another account.
+    match /maintenanceTickets/{ticketId} {
+      allow read, delete: if isSignedIn() &&
+        resource.data.providerId == request.auth.uid;
+      allow create: if isSignedIn() &&
+        request.resource.data.providerId == request.auth.uid &&
+        request.resource.data.status == "open";
+      allow update: if isSignedIn() &&
+        resource.data.providerId == request.auth.uid &&
+        request.resource.data.providerId == resource.data.providerId;
+    }
+
+    // ── reviews/{reviewId} ──
+    // Public read. Only the author can create/edit/delete their own.
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.studentId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.studentId == request.auth.uid;
+    }
+  }
+}
